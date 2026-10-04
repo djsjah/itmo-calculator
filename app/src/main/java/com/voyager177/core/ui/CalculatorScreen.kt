@@ -40,7 +40,6 @@ import com.voyager177.core.logic.CalculatorEngine
 import com.voyager177.core.logic.Operation
 
 private const val MAX_INPUT_LENGTH = 15
-
 private val CalculatorBackgroundColor = Color.Black
 
 @Composable
@@ -107,6 +106,11 @@ fun CalculatorScreen(calculatorEngine: CalculatorEngine) {
             return
         }
 
+        if (currentInput == "-") {
+            currentInput = "-0."
+            return
+        }
+
         if (
             !currentInput.contains('.') &&
             currentInput.length < MAX_INPUT_LENGTH
@@ -118,13 +122,19 @@ fun CalculatorScreen(calculatorEngine: CalculatorEngine) {
     fun selectOperation(newOperation: Operation) {
         if (hasError) return
 
+        if (
+            newOperation == Operation.SUBTRACT && startNewNumber
+            && (operation != null || currentInput == "0")
+        ) {
+            currentInput = "-"
+            startNewNumber = false
+            return
+        }
+
         val currentNumber = currentInput.toDoubleOrNull() ?: return
         val currentOperation = operation
 
-        if (
-            currentOperation != null &&
-            !startNewNumber
-        ) {
+        if (currentOperation != null && !startNewNumber) {
             val result = calculatorEngine.calculate(
                 firstNumber = firstNumber,
                 secondNumber = currentNumber,
@@ -149,7 +159,6 @@ fun CalculatorScreen(calculatorEngine: CalculatorEngine) {
 
     fun calculateResult() {
         val currentOperation = operation ?: return
-
         if (hasError || startNewNumber) return
 
         val secondNumber = currentInput.toDoubleOrNull() ?: return
@@ -321,7 +330,9 @@ private fun CalculatorDisplay(display: String, modifier: Modifier = Modifier, co
     val scrollState = rememberScrollState()
 
     LaunchedEffect(display, scrollState.maxValue) {
-        scrollState.scrollTo(scrollState.maxValue)
+        scrollState.scrollTo(
+            scrollState.maxValue
+        )
     }
 
     Box(modifier = modifier.padding(16.dp), contentAlignment = Alignment.BottomEnd) {
