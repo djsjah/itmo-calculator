@@ -28,7 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -146,10 +149,10 @@ fun CalculatorScreen(calculatorEngine: CalculatorEngine) {
 
     fun calculateResult() {
         val currentOperation = operation ?: return
+
         if (hasError || startNewNumber) return
 
         val secondNumber = currentInput.toDoubleOrNull() ?: return
-
         val result = calculatorEngine.calculate(
             firstNumber = firstNumber,
             secondNumber = secondNumber,
@@ -200,27 +203,35 @@ fun CalculatorScreen(calculatorEngine: CalculatorEngine) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    if (isLandscape) {
-        LandscapeCalculator(
-            display = displayText,
-            selectedOperation = operation,
-            onDigitClick = ::inputDigit,
-            onDecimalClick = ::inputDecimalPoint,
-            onOperationClick = ::selectOperation,
-            onEqualsClick = ::calculateResult,
-            onClearClick = ::clear
-        )
-    }
-    else {
-        PortraitCalculator(
-            display = displayText,
-            selectedOperation = operation,
-            onDigitClick = ::inputDigit,
-            onDecimalClick = ::inputDecimalPoint,
-            onOperationClick = ::selectOperation,
-            onEqualsClick = ::calculateResult,
-            onClearClick = ::clear
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics {
+                testTagsAsResourceId = true
+            }
+    ) {
+        if (isLandscape) {
+            LandscapeCalculator(
+                display = displayText,
+                selectedOperation = operation,
+                onDigitClick = ::inputDigit,
+                onDecimalClick = ::inputDecimalPoint,
+                onOperationClick = ::selectOperation,
+                onEqualsClick = ::calculateResult,
+                onClearClick = ::clear
+            )
+        }
+        else {
+            PortraitCalculator(
+                display = displayText,
+                selectedOperation = operation,
+                onDigitClick = ::inputDigit,
+                onDecimalClick = ::inputDecimalPoint,
+                onOperationClick = ::selectOperation,
+                onEqualsClick = ::calculateResult,
+                onClearClick = ::clear
+            )
+        }
     }
 }
 
@@ -310,19 +321,15 @@ private fun CalculatorDisplay(display: String, modifier: Modifier = Modifier, co
     val scrollState = rememberScrollState()
 
     LaunchedEffect(display, scrollState.maxValue) {
-        scrollState.scrollTo(
-            scrollState.maxValue
-        )
+        scrollState.scrollTo(scrollState.maxValue)
     }
 
-    Box(
-        modifier = modifier.padding(16.dp),
-        contentAlignment = Alignment.BottomEnd
-    ) {
+    Box(modifier = modifier.padding(16.dp), contentAlignment = Alignment.BottomEnd) {
         SelectionContainer {
             Text(
                 text = display,
                 modifier = Modifier
+                    .testTag("result")
                     .horizontalScroll(scrollState),
                 color = Color.White,
                 fontSize = if (compact) {
